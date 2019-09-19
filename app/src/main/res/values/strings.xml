@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">BakingApp</string>
+
+    <string name="ingredients">Ingredients</string>
+    <string name="thumbnail_image">Thumbnail Image</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
+    <string name="widget_recipe">Recipe</string>
+    <string name="recipe_id">Id</string>
+    <string name="empty">No Ingredients to show!</string>
+    <string name="recipe_string">recipe</string>
+</resources>
