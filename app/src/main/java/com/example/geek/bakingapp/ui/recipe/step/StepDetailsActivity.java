@@ -15,8 +15,7 @@ import androidx.fragment.app.FragmentManager;
 
 public class StepDetailsActivity extends AppCompatActivity {
 
-    private StepDetailsActivityBinding binding;
-    private Step step;
+    protected StepDetailsActivityBinding binding;
     public static final String STEP_EXTRA = "step";
 
     @Override
@@ -24,7 +23,7 @@ public class StepDetailsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.step_details_activity);
 
-        step = Parcels.unwrap(getIntent().getParcelableExtra(STEP_EXTRA));
+        Step step = Parcels.unwrap(getIntent().getParcelableExtra(STEP_EXTRA));
         StepDetailsFragment stepDetailsFragment = StepDetailsFragment.newInstance(step);
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction().add(R.id.stepDetailsContainer, stepDetailsFragment).commit();

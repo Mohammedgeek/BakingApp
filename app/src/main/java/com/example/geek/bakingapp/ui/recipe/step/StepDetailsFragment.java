@@ -1,11 +1,9 @@
 package com.example.geek.bakingapp.ui.recipe.step;
 
 
-import android.annotation.SuppressLint;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,21 +14,22 @@ import com.example.geek.bakingapp.ui.recipe.RecipeActivity;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.squareup.picasso.Picasso;
 
 import org.parceler.Parcels;
 
 import java.net.URLConnection;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,16 +40,15 @@ import androidx.fragment.app.Fragment;
  */
 public class StepDetailsFragment extends Fragment {
 
+    private static final String CURRENT_WINDOW_INDEX = "current_window_index";
+    private static final String PLAYBACK_POSITION = "playback_position";
     private Step step;
     private FragmentStepDetailBinding binding;
     private SimpleExoPlayer exoPlayer;
     private String mVideoUrl;
-    private String mThumbnailUrl;
     private boolean viewVideo;
     private int currentWindow;
     private long playbackPosition;
-    private static final String CURRENT_WINDOW_INDEX = "current_window_index";
-    private static final String PLAYBACK_POSITION = "playback_position";
 
     public StepDetailsFragment() {
         // Required empty public constructor
@@ -89,10 +87,11 @@ public class StepDetailsFragment extends Fragment {
             playbackPosition = savedInstanceState.getLong(PLAYBACK_POSITION, 0);
             currentWindow = savedInstanceState.getInt(CURRENT_WINDOW_INDEX, 0);
         }
+        assert getArguments() != null;
         step = Parcels.unwrap(getArguments().getParcelable("step"));
         assert step != null;
         mVideoUrl = step.getVideoURL();
-        mThumbnailUrl = step.getThumbnailURL();
+        String mThumbnailUrl = step.getThumbnailURL();
         if (mVideoUrl != null && !mVideoUrl.isEmpty()) {
             viewVideo = true;
             mVideoUrl = step.getVideoURL();
@@ -106,7 +105,7 @@ public class StepDetailsFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        if (Util.SDK_INT > 23) {
+        if (viewVideo && Util.SDK_INT > 23) {
             initializePlayer(Uri.parse(mVideoUrl));
         }
     }
@@ -114,17 +113,11 @@ public class StepDetailsFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (viewVideo && Util.SDK_INT <= 23) {
+        if (viewVideo && Util.SDK_INT > 23) {
             initializePlayer(Uri.parse(mVideoUrl));
         } else binding.exoPlayerView.setVisibility(View.GONE);
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (Util.SDK_INT <= 23)
-            releasePlayer();
-    }
 
     @Override
     public void onStop() {
@@ -150,14 +143,16 @@ public class StepDetailsFragment extends Fragment {
     }
 
     private void initializePlayer(Uri uri) {
-        // exoPlayer = ExoPlayerFactory.newSimpleInstance(getContext(), new DefaultTrackSelector());
+        //exoPlayer = ExoPlayerFactory.newSimpleInstance(getContext(), new DefaultTrackSelector());
+        TrackSelector trackSelector = new DefaultTrackSelector();
+        LoadControl loadControl = new DefaultLoadControl();
         exoPlayer = ExoPlayerFactory.newSimpleInstance
-                (new DefaultRenderersFactory(getContext()), new DefaultTrackSelector(), new DefaultLoadControl());
+                (new DefaultRenderersFactory(getContext()), trackSelector, loadControl);
         binding.exoPlayerView.setPlayer(exoPlayer);
         exoPlayer.setPlayWhenReady(true);
         exoPlayer.seekTo(currentWindow, playbackPosition);
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory
-                (getContext(), Util.getUserAgent(getContext(), "BakingApp"));
+                (Objects.requireNonNull(getContext()), Util.getUserAgent(getContext(), "BakingApp"));
         MediaSource videoSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
         exoPlayer.prepare(videoSource);
 
